@@ -183,6 +183,8 @@ pub(crate) fn generate(command: &Command) -> Status {
         std::fs::create_dir_all(&new_path).unwrap();
     }
 
+    let mut created_files: Vec<(String, bool)> = Vec::new();
+
     if utils::template_handler::generate_template_dir(
         &format!(".templates/{}", template_name),
         &new_path,
@@ -190,10 +192,26 @@ pub(crate) fn generate(command: &Command) -> Status {
         dry_run,
         meta.clone(),
         force,
+        &mut created_files,
     ) {
         log!("Files generated successfully.");
         Status::ok()
     } else {
+        for (path, is_dir) in created_files {
+            if is_dir {
+                if std::fs::metadata(&path).is_ok() {
+                    if let Err(e) = std::fs::remove_dir_all(&path) {
+                        log!("Failed to remove directory {}: {}", path, e);
+                    }
+                } else {
+                    if std::fs::metadata(&path).is_ok() {
+                        if let Err(e) = std::fs::remove_file(&path) {
+                            log!("Failed to remove file {}: {}", path, e);
+                        }
+                    }
+                }
+            }
+        }
         Status::error("Files could not be generated.".to_string())
     }
 }
