@@ -560,7 +560,9 @@ pub(crate) fn generate_template_dir(
 
         if path.is_dir() {
             if !dry_run {
-                created_files.push((new_path.clone(), true));
+                if !Path::new(&new_path).exists() || force {
+                    created_files.push((new_path.clone(), true));
+                }
                 std::fs::create_dir_all(&new_path).unwrap();
             }
             if !generate_template_dir(
@@ -623,7 +625,6 @@ pub(crate) fn generate_template_file(
     new_file.write_all(file_content.as_bytes()).unwrap();
 
     let abs_path = std::fs::canonicalize(new_path).unwrap();
-
 
     log!("Created file {}", abs_path.to_str().unwrap());
     true

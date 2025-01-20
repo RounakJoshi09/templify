@@ -198,17 +198,12 @@ pub(crate) fn generate(command: &Command) -> Status {
         Status::ok()
     } else {
         for (path, is_dir) in created_files {
-            if is_dir {
-                if std::fs::metadata(&path).is_ok() {
-                    if let Err(e) = std::fs::remove_dir_all(&path) {
-                        log!("Failed to remove directory {}: {}", path, e);
-                    }
+            log!("Cleaning up: {}", path);
+            if std::fs::metadata(&path).is_ok() {
+                if is_dir {
+                    std::fs::remove_dir_all(&path).unwrap();
                 } else {
-                    if std::fs::metadata(&path).is_ok() {
-                        if let Err(e) = std::fs::remove_file(&path) {
-                            log!("Failed to remove file {}: {}", path, e);
-                        }
-                    }
+                    std::fs::remove_file(&path).unwrap();
                 }
             }
         }
